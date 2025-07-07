@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block title %}Food Database - FoodTracker Pro{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3">
+                        <i class="bi bi-database me-2"></i>Food Database
+                    </h1>
+                    <p class="text-muted">Browse our comprehensive nutrition database</p>
+                </div>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="search" class="form-label">
+                                <i class="bi bi-search me-2"></i>Search Foods
+                            </label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search }}" placeholder="Enter food name...">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="cuisine" class="form-label">
+                                <i class="bi bi-filter me-2"></i>Cuisine Type
+                            </label>
+                            <select class="form-select" id="cuisine" name="cuisine">
+                                <option value="">All Cuisines</option>
+                                <option value="Indian" {{ 'selected' if cuisine == 'Indian' }}>🇮🇳 Indian</option>
+                                <option value="Fruit" {{ 'selected' if cuisine == 'Fruit' }}>🍎 Fruits</option>
+                                <option value="Vegetable" {{ 'selected' if cuisine == 'Vegetable' }}>🥬 Vegetables</option>
+                                <option value="Protein" {{ 'selected' if cuisine == 'Protein' }}>🍗 Proteins</option>
+                                <option value="Carbs" {{ 'selected' if cuisine == 'Carbs' }}>🍞 Carbohydrates</option>
+                                <option value="Dairy" {{ 'selected' if cuisine == 'Dairy' }}>🥛 Dairy</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search me-1"></i>Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Stats -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <p class="text-muted mb-0">
+                    <strong>{{ foods|length }}</strong> food{{ 's' if foods|length != 1 else '' }} found
+                </p>
+                <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check" name="view" id="cardView" checked>
+                    <label class="btn btn-outline-secondary" for="cardView">
+                        <i class="bi bi-grid"></i>
+                    </label>
+                    <input type="radio" class="btn-check" name="view" id="listView">
+                    <label class="btn btn-outline-secondary" for="listView">
+                        <i class="bi bi-list"></i>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Food Results -->
+            {% if foods %}
+                <div id="foodResults">
+                    <!-- Card View -->
+                    <div id="cardViewContainer" class="row g-4">
+                        {% for food in foods %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 food-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">{{ food[0] }}</h6>
+                                        <span class="badge bg-primary">{{ food[5] }}</span>
+                                    </div>
+                                    
+                                    <div class="row text-center mb-3">
+                                        <div class="col-6">
+                                            <div class="nutrition-stat">
+                                                <strong class="text-danger">{{ food[1] }}</strong>
+                                                <small class="d-block text-muted">Calories/100g</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="nutrition-stat">
+                                                <strong class="text-success">{{ food[2] }}g</strong>
+                                                <small class="d-block text-muted">Protein</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="nutrition-breakdown">
+                                        <div class="row text-center small">
+                                            <div class="col-4">
+                                                <span class="text-info">{{ food[3] }}g</span>
+                                                <div class="text-muted">Carbs</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="text-warning">{{ food[4] }}g</span>
+                                                <div class="text-muted">Fat</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <span class="text-success">-</span>
+                                                <div class="text-muted">Fiber</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- List View -->
+                    <div id="listViewContainer" class="table-responsive" style="display: none;">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Food Name</th>
+                                    <th>Cuisine</th>
+                                    <th>Calories/100g</th>
+                                    <th>Protein (g)</th>
+                                    <th>Carbs (g)</th>
+                                    <th>Fat (g)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for food in foods %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ food[0] }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ food[5] }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-danger fw-bold">{{ food[1] }}</span>
+                                    </td>
+                                    <td>{{ food[2] }}</td>
+                                    <td>{{ food[3] }}</td>
+                                    <td>{{ food[4] }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                onclick="showFoodDetails('{{ food[0] }}', {{ food[1] }}, {{ food[2] }}, {{ food[3] }}, {{ food[4] }}, '{{ food[5] }}')">
+                                            <i class="bi bi-info-circle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% else %}
+                <!-- No Results -->
+                <div class="text-center py-5">
+                    <i class="bi bi-search" style="font-size: 4rem; color: #ccc;"></i>
+                    <h4 class="mt-3 text-muted">No foods found</h4>
+                    <p class="text-muted">
+                        {% if search or cuisine %}
+                            Try adjusting your search criteria or 
+                            <a href="{{ url_for('food_database') }}" class="text-decoration-none">clear filters</a>
+                        {% else %}
+                            The food database is being populated...
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Food Details Modal -->
+<div class="modal fade" id="foodModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="foodModalTitle">Food Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="foodModalBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Add to Meal Plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.food-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.food-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.nutrition-stat {
+    padding: 0.5rem;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.nutrition-breakdown {
+    border-top: 1px solid #e9ecef;
+    padding-top: 1rem;
+}
+
+.btn-check:checked + .btn-outline-secondary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // View toggle functionality
+    const cardViewBtn = document.getElementById('cardView');
+    const listViewBtn = document.getElementById('listView');
+    const cardContainer = document.getElementById('cardViewContainer');
+    const listContainer = document.getElementById('listViewContainer');
+    
+    cardViewBtn.addEventListener('change', function() {
+        if (this.checked) {
+            cardContainer.style.display = 'block';
+            listContainer.style.display = 'none';
+        }
+    });
+    
+    listViewBtn.addEventListener('change', function() {
+        if (this.checked) {
+            cardContainer.style.display = 'none';
+            listContainer.style.display = 'block';
+        }
+    });
+    
+    // Auto-submit search on filter change
+    document.getElementById('cuisine').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    // Search suggestions (simplified)
+    const searchInput = document.getElementById('search');
+    searchInput.addEventListener('input', function() {
+        // You can add search suggestions here
+    });
+});
+
+function showFoodDetails(name, calories, protein, carbs, fat, cuisine) {
+    const modal = new bootstrap.Modal(document.getElementById('foodModal'));
+    
+    // Set modal title
+    document.getElementById('foodModalTitle').innerHTML = `
+        <i class="bi bi-info-circle me-2"></i>${name}
+    `;
+    
+    // Calculate nutritional percentages
+    const totalMacros = protein * 4 + carbs * 4 + fat * 9;
+    const proteinPercent = totalMacros > 0 ? ((protein * 4) / totalMacros * 100).toFixed(1) : 0;
+    const carbPercent = totalMacros > 0 ? ((carbs * 4) / totalMacros * 100).toFixed(1) : 0;
+    const fatPercent = totalMacros > 0 ? ((fat * 9) / totalMacros * 100).toFixed(1) : 0;
+    
+    // Set modal body
+    document.getElementById('foodModalBody').innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6><i class="bi bi-pie-chart me-2"></i>Nutrition Facts (per 100g)</h6>
+                <div class="nutrition-fact-panel">
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <span>Calories</span>
+                        <strong>${calories} kcal</strong>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <span>Protein</span>
+                        <strong>${protein}g (${proteinPercent}%)</strong>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <span>Carbohydrates</span>
+                        <strong>${carbs}g (${carbPercent}%)</strong>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <span>Fat</span>
+                        <strong>${fat}g (${fatPercent}%)</strong>
+                    </div>
+                    <div class="d-flex justify-content-between py-2">
+                        <span>Cuisine Type</span>
+                        <span class="badge bg-primary">${cuisine}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="bi bi-calculator me-2"></i>Portion Calculator</h6>
+                <div class="mb-3">
+                    <label for="portion" class="form-label">Portion Size (g)</label>
+                    <input type="number" class="form-control" id="portion" value="100" min="1" onchange="updateNutrition(${calories}, ${protein}, ${carbs}, ${fat})">
+                </div>
+                <div id="portionNutrition">
+                    <div class="alert alert-info">
+                        <strong>For 100g:</strong><br>
+                        ${calories} calories, ${protein}g protein, ${carbs}g carbs, ${fat}g fat
+                    </div>
+                </div>
+                
+                <h6 class="mt-4"><i class="bi bi-lightbulb me-2"></i>Recommendations</h6>
+                <div class="small text-muted">
+                    ${getRecommendations(calories, protein, carbs, fat, cuisine)}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+}
+
+function updateNutrition(baseCal, baseProt, baseCarbs, baseFat) {
+    const portion = document.getElementById('portion').value;
+    const ratio = portion / 100;
+    
+    const calories = Math.round(baseCal * ratio);
+    const protein = Math.round(baseProt * ratio * 10) / 10;
+    const carbs = Math.round(baseCarbs * ratio * 10) / 10;
+    const fat = Math.round(baseFat * ratio * 10) / 10;
+    
+    document.getElementById('portionNutrition').innerHTML = `
+        <div class="alert alert-info">
+            <strong>For ${portion}g:</strong><br>
+            ${calories} calories, ${protein}g protein, ${carbs}g carbs, ${fat}g fat
+        </div>
+    `;
+}
+
+function getRecommendations(calories, protein, carbs, fat, cuisine) {
+    let recommendations = [];
+    
+    if (calories < 50) {
+        recommendations.push("• Low calorie - great for weight management");
+    } else if (calories > 300) {
+        recommendations.push("• High calorie - consume in moderation");
+    }
+    
+    if (protein > 15) {
+        recommendations.push("• High protein - excellent for muscle building");
+    }
+    
+    if (cuisine === 'Indian') {
+        recommendations.push("• Traditional Indian cuisine - rich in spices and flavor");
+    } else if (cuisine === 'Fruit') {
+        recommendations.push("• Natural fruit - rich in vitamins and antioxidants");
+    }
+    
+    if (fat < 2) {
+        recommendations.push("• Low fat content - heart-healthy option");
+    }
+    
+    return recommendations.length > 0 ? recommendations.join('<br>') : "• Balanced nutrition profile";
+}
+</script>
+{% endblock %}
