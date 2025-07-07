@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import joblib
 import pandas as pd
 import os
@@ -67,15 +67,31 @@ def make_prediction(form_data):
 # Routes
 # -----------------------------------------------------------
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def home():
-    prediction = None
-    if request.method == 'POST':
-        if model is None:
-            prediction = "Model not loaded. Train and save a model in the models/ folder first."
-        else:
-            prediction = make_prediction(request.form)
-    return render_template('car_price.html', prediction=prediction)
+    return render_template('car_price.html')
+
+# New JSON prediction endpoint
+@app.route('/predict', methods=['POST'])
+def predict_api():
+    if model is None:
+        return jsonify({'success': False, 'error': 'Model not loaded.'}), 500
+
+    data = request.get_json(silent=True)
+    if not data:
+        # Fallback to form-encoded data
+        data = request.form.to_dict()
+    if not data:
+        return jsonify({'success': False, 'error': 'No input received.'}), 400
+
+    try:
+        price = make_prediction(data)
+        if isinstance(price, str):
+            # Error message returned
+            return jsonify({'success': False, 'error': price}), 400
+        return jsonify({'success': True, 'predicted_price': price})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # -----------------------------------------------------------
 # Main launcher

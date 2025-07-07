@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'car_base.html' %}
 {% block title %}Used Car Price Prediction{% endblock %}
 
 {% block content %}
@@ -7,7 +7,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card p-4">
-                <form method="POST" novalidate>
+                <form id="price-form" class="needs-validation" novalidate>
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Year</label>
@@ -51,18 +51,70 @@
                         <button type="submit" class="btn btn-primary">Predict Price</button>
                     </div>
                 </form>
-                {% if prediction is not none %}
-                    <hr>
-                    <h4 class="text-center">Predicted Selling Price: 
-                        {% if prediction is string %}
-                            {{ prediction }}
-                        {% else %}
-                            ₹ {{ prediction }} lakhs
-                        {% endif %}
-                    </h4>
-                {% endif %}
+                <div id="result-area" class="mt-4"></div>
+                <div class="text-center mt-3" id="loading" style="display:none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Bootstrap validation
+(function () {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms).forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})();
+
+// AJAX submit with spinner
+const form = document.getElementById('price-form');
+const loading = document.getElementById('loading');
+const resultArea = document.getElementById('result-area');
+
+form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!form.checkValidity()) return;
+
+    loading.style.display = 'block';
+    resultArea.innerHTML = '';
+
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    fetch('/predict', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(json => {
+        loading.style.display = 'none';
+        if(json.success){
+            resultArea.innerHTML = `<div class="alert alert-success text-center">Predicted Selling Price: ₹ ${json.predicted_price} lakhs</div>`;
+        } else {
+            resultArea.innerHTML = `<div class="alert alert-danger text-center">Error: ${json.error}</div>`;
+        }
+    })
+    .catch(err => {
+        loading.style.display = 'none';
+        resultArea.innerHTML = `<div class="alert alert-danger text-center">Request failed: ${err}</div>`;
+    });
+});
+</script>
 {% endblock %}
