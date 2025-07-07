@@ -1,0 +1,197 @@
+/* Custom CSS for FoodTracker Pro */
+
+/* Loading animations */
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Smooth transitions */
+.smooth-transition {
+    transition: all 0.3s ease;
+}
+
+/* Custom button styles */
+.btn-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+    border: none;
+    color: white;
+}
+
+.btn-gradient:hover {
+    background: linear-gradient(135deg, var(--success-color), var(--primary-color));
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+}
+
+/* Food analysis results */
+.analysis-result {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px 0;
+}
+
+.food-confidence {
+    display: inline-block;
+    padding: 4px 8px;
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--primary-color);
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+/* Nutrition progress bars */
+.nutrition-progress {
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 5px 0;
+}
+
+.nutrition-progress .progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+/* Chart containers */
+.chart-container {
+    position: relative;
+    height: 200px;
+    margin: 20px 0;
+}
+
+/* Hover effects */
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Alert styles */
+.alert-custom {
+    border: none;
+    border-radius: 10px;
+    padding: 15px 20px;
+}
+
+.alert-success-custom {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+}
+
+.alert-warning-custom {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
+}
+
+.alert-danger-custom {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: #721c24;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .upload-area {
+        padding: 20px;
+    }
+    
+    .stats-card {
+        margin-bottom: 15px;
+    }
+    
+    .sidebar {
+        margin-top: 20px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1a1a1a;
+        --text-color: #ffffff;
+        --card-bg: #2d2d2d;
+    }
+    
+    .card {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+    }
+    
+    .navbar-dark {
+        background: linear-gradient(135deg, #2d2d2d, #1a1a1a) !important;
+    }
+}
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--success-color);
+}
+
+/* Utility classes */
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.border-gradient {
+    border: 2px solid;
+    border-image: linear-gradient(135deg, var(--primary-color), var(--success-color)) 1;
+}
+
+.shadow-custom {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.shadow-hover {
+    transition: box-shadow 0.3s ease;
+}
+
+.shadow-hover:hover {
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
