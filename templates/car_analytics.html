@@ -1,0 +1,315 @@
+{% extends "car_base.html" %}
+
+{% block title %}Analytics - CarPredict{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 100px; margin-bottom: 50px;">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h1 class="text-white">Model Performance Analytics</h1>
+            <p class="text-white-50 lead">Detailed insights into our machine learning models</p>
+        </div>
+    </div>
+
+    {% if performance %}
+    <!-- Model Performance Overview -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-chart-line"></i> Model Performance Summary</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th><i class="fas fa-robot"></i> Model</th>
+                                    <th><i class="fas fa-target"></i> R² Score</th>
+                                    <th><i class="fas fa-exclamation-triangle"></i> MAE (₹ Lakhs)</th>
+                                    <th><i class="fas fa-chart-bar"></i> RMSE (₹ Lakhs)</th>
+                                    <th><i class="fas fa-star"></i> Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for model_name, metrics in performance.items() %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ model_name }}</strong>
+                                        {% if model_name == 'Random Forest' %}
+                                        <span class="badge bg-success ms-2">Best</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress me-2" style="width: 100px; height: 8px;">
+                                                <div class="progress-bar" style="width: {{ (metrics.R2 * 100)|round(1) }}%"></div>
+                                            </div>
+                                            <span>{{ "%.3f"|format(metrics.R2) }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ "%.2f"|format(metrics.MAE) }}</td>
+                                    <td>{{ "%.2f"|format(metrics.RMSE) }}</td>
+                                    <td>
+                                        {% set rating = (metrics.R2 * 5)|round(0)|int %}
+                                        {% for i in range(5) %}
+                                            {% if i < rating %}
+                                                <i class="fas fa-star text-warning"></i>
+                                            {% else %}
+                                                <i class="far fa-star text-muted"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Charts -->
+    <div class="row mb-5">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar"></i> R² Score Comparison</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="r2Chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line"></i> Error Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="errorChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Details -->
+    <div class="row">
+        {% for model_name, metrics in performance.items() %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">{{ model_name }}</h5>
+                        {% if model_name == 'Random Forest' %}
+                        <span class="badge bg-success">Recommended</span>
+                        {% elif model_name in ['Gradient Boosting'] %}
+                        <span class="badge bg-info">High Accuracy</span>
+                        {% elif model_name in ['Linear Regression', 'Ridge Regression', 'Lasso Regression'] %}
+                        <span class="badge bg-primary">Fast</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Accuracy (R²)</span>
+                            <strong>{{ "%.1f"|format(metrics.R2 * 100) }}%</strong>
+                        </div>
+                        <div class="progress mt-1">
+                            <div class="progress-bar" style="width: {{ (metrics.R2 * 100)|round(1) }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="text-primary mb-0">{{ "%.2f"|format(metrics.MAE) }}</h6>
+                                <small class="text-muted">MAE</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-info mb-0">{{ "%.2f"|format(metrics.RMSE) }}</h6>
+                            <small class="text-muted">RMSE</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        {% if model_name == 'Random Forest' %}
+                        <p class="text-muted small">Best overall performance with excellent accuracy and reliability for car price prediction.</p>
+                        {% elif model_name == 'Gradient Boosting' %}
+                        <p class="text-muted small">High accuracy ensemble method that builds models sequentially to reduce errors.</p>
+                        {% elif model_name == 'Linear Regression' %}
+                        <p class="text-muted small">Simple and interpretable model that captures linear relationships between features.</p>
+                        {% elif model_name == 'Ridge Regression' %}
+                        <p class="text-muted small">Regularized linear model that prevents overfitting with L2 penalty.</p>
+                        {% elif model_name == 'Lasso Regression' %}
+                        <p class="text-muted small">Feature selection model with L1 regularization for sparse solutions.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- No Performance Data -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-line text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-muted">Models Not Trained Yet</h4>
+                    <p class="text-muted">The machine learning models are currently being trained. Please wait a moment and refresh the page.</p>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('train_models') }}" class="btn btn-primary">
+                            <i class="fas fa-cogs"></i> Train Models Now
+                        </a>
+                        <button class="btn btn-outline-secondary ms-2" onclick="location.reload()">
+                            <i class="fas fa-refresh"></i> Refresh Page
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Model Information -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-info-circle"></i> About Our Models</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-brain text-primary"></i> Machine Learning Approach</h6>
+                            <p class="text-muted">
+                                We use ensemble methods and regression algorithms to predict car prices based on 
+                                multiple features including year, mileage, fuel type, and ownership history.
+                            </p>
+                            
+                            <h6><i class="fas fa-database text-info"></i> Training Data</h6>
+                            <p class="text-muted">
+                                Our models are trained on 2000+ car records with realistic pricing patterns, 
+                                depreciation curves, and market factors.
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-target text-success"></i> Accuracy Metrics</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>R² Score:</strong> Explains variance in price predictions</li>
+                                <li><strong>MAE:</strong> Mean Absolute Error in lakhs</li>
+                                <li><strong>RMSE:</strong> Root Mean Squared Error in lakhs</li>
+                            </ul>
+                            
+                            <h6><i class="fas fa-chart-line text-warning"></i> Model Selection</h6>
+                            <p class="text-muted">
+                                Random Forest typically performs best for car price prediction due to its ability 
+                                to capture non-linear relationships and feature interactions.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if performance %}
+<script>
+// R² Score Chart
+const r2Ctx = document.getElementById('r2Chart').getContext('2d');
+const r2Chart = new Chart(r2Ctx, {
+    type: 'bar',
+    data: {
+        labels: {{ performance.keys()|list|tojson }},
+        datasets: [{
+            label: 'R² Score',
+            data: {{ performance.values()|map(attribute='R2')|list|tojson }},
+            backgroundColor: [
+                '#667eea',
+                '#764ba2',
+                '#f093fb',
+                '#f5576c',
+                '#4facfe'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 1,
+                title: {
+                    display: true,
+                    text: 'R² Score'
+                }
+            }
+        }
+    }
+});
+
+// Error Metrics Chart
+const errorCtx = document.getElementById('errorChart').getContext('2d');
+const errorChart = new Chart(errorCtx, {
+    type: 'line',
+    data: {
+        labels: {{ performance.keys()|list|tojson }},
+        datasets: [{
+            label: 'MAE',
+            data: {{ performance.values()|map(attribute='MAE')|list|tojson }},
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'RMSE',
+            data: {{ performance.values()|map(attribute='RMSE')|list|tojson }},
+            borderColor: '#f5576c',
+            backgroundColor: 'rgba(245, 87, 108, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Error (₹ Lakhs)'
+                }
+            }
+        }
+    }
+});
+
+// Set chart height
+document.getElementById('r2Chart').style.height = '300px';
+document.getElementById('errorChart').style.height = '300px';
+</script>
+{% endif %}
+{% endblock %}

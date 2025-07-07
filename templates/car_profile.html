@@ -1,0 +1,131 @@
+{% extends "car_base.html" %}
+
+{% block title %}My Profile - CarPredict{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 100px; margin-bottom: 50px;">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h1 class="text-white">My Profile</h1>
+            <p class="text-white-50 lead">Welcome back, {{ session.username }}!</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- User Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-user"></i> Account Information</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-user text-white" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="mt-3 mb-1">{{ session.full_name or session.username }}</h5>
+                        <p class="text-muted">{{ session.username }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6><i class="fas fa-chart-line text-primary"></i> Prediction Stats</h6>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-primary mb-0">{{ predictions|length }}</h4>
+                                    <small class="text-muted">Total Predictions</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-success mb-0">
+                                    {% if predictions %}
+                                        ₹{{ "%.1f"|format(predictions|map(attribute=7)|sum / predictions|length) }}L
+                                    {% else %}
+                                        ₹0L
+                                    {% endif %}
+                                </h4>
+                                <small class="text-muted">Avg. Prediction</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('predict') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> New Prediction
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prediction History -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4><i class="fas fa-history"></i> Prediction History</h4>
+                    {% if predictions %}
+                    <span class="badge bg-primary">{{ predictions|length }} predictions</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if predictions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Car Details</th>
+                                    <th>Predicted Price</th>
+                                    <th>Model Used</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prediction in predictions %}
+                                <tr>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ prediction[9][:16] if prediction[9] else 'N/A' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ prediction[0] }}</strong> • 
+                                            {{ "{:,}".format(prediction[2]) }}km<br>
+                                            <small class="text-muted">
+                                                {{ prediction[3] }} • {{ prediction[5] }} • {{ prediction[4] }}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">₹{{ prediction[7] }} L</strong><br>
+                                        <small class="text-muted">Present: ₹{{ prediction[1] }}L</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ prediction[8] }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-line text-muted" style="font-size: 4rem;"></i>
+                        <h5 class="mt-3 text-muted">No Predictions Yet</h5>
+                        <p class="text-muted">Start by making your first car price prediction!</p>
+                        <a href="{{ url_for('predict') }}" class="btn btn-primary">
+                            <i class="fas fa-calculator"></i> Make Prediction
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
