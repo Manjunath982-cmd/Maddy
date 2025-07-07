@@ -1,81 +1,123 @@
 import sqlite3
-from datetime import datetime, timedelta
-from typing import Dict, List, Any
 import random
+from datetime import datetime, timedelta
+import json
 
 class DietAdvisor:
     def __init__(self):
-        """Initialize the diet advisor with recommendation algorithms"""
-        self.bmr_multipliers = {
-            'sedentary': 1.2,
-            'lightly_active': 1.375,
-            'moderately_active': 1.55,
-            'very_active': 1.725,
-            'extremely_active': 1.9
-        }
+        """Initialize the diet advisor with predefined suggestions and knowledge base"""
         
-        # Food recommendations based on goals
-        self.goal_foods = {
-            'weight_loss': {
-                'recommended': ['broccoli', 'apple', 'chicken breast', 'dal', 'green vegetables'],
-                'avoid': ['samosa', 'fried foods', 'sweets', 'high calorie snacks'],
-                'calorie_deficit': 500  # calories per day
-            },
-            'weight_gain': {
-                'recommended': ['nuts', 'paneer', 'biryani', 'milk', 'protein rich foods'],
-                'avoid': ['excessive low calorie foods'],
-                'calorie_surplus': 500  # calories per day
-            },
-            'maintain': {
-                'recommended': ['balanced meals', 'variety of foods', 'fruits', 'vegetables'],
-                'avoid': ['excessive anything'],
-                'calorie_adjustment': 0
-            },
-            'muscle_gain': {
-                'recommended': ['chicken', 'eggs', 'dal', 'paneer', 'fish', 'protein sources'],
-                'avoid': ['empty calories', 'too much sugar'],
-                'protein_focus': True
-            }
-        }
-        
-        # Indian meal suggestions
-        self.indian_meal_suggestions = {
-            'breakfast': [
-                {'name': 'Idli with Sambar', 'calories': 200, 'type': 'light'},
-                {'name': 'Poha with vegetables', 'calories': 250, 'type': 'medium'},
-                {'name': 'Dosa with chutney', 'calories': 300, 'type': 'medium'},
-                {'name': 'Upma with nuts', 'calories': 280, 'type': 'medium'},
-                {'name': 'Paratha with curd', 'calories': 350, 'type': 'heavy'}
+        # Health-focused diet suggestions
+        self.health_suggestions = {
+            'weight_loss': [
+                "Consider reducing portion sizes by 20% to create a calorie deficit.",
+                "Include more protein-rich foods to maintain muscle mass during weight loss.",
+                "Add more fiber-rich vegetables to feel full with fewer calories.",
+                "Try intermittent fasting - eating within an 8-hour window.",
+                "Replace refined carbs with whole grain alternatives.",
+                "Drink water before meals to help control portion sizes."
             ],
-            'lunch': [
-                {'name': 'Rice, Dal, Vegetable curry', 'calories': 450, 'type': 'balanced'},
-                {'name': 'Roti, Paneer curry, Salad', 'calories': 400, 'type': 'balanced'},
-                {'name': 'Biryani with raita', 'calories': 600, 'type': 'heavy'},
-                {'name': 'Chole with rice', 'calories': 500, 'type': 'medium'},
-                {'name': 'Mixed dal with vegetables', 'calories': 350, 'type': 'light'}
+            'weight_gain': [
+                "Add healthy fats like nuts, avocados, and olive oil to increase calories.",
+                "Include protein shakes between meals for extra nutrition.",
+                "Eat more frequent, smaller meals throughout the day.",
+                "Focus on calorie-dense foods like dried fruits and nut butters.",
+                "Add strength training to build muscle mass while gaining weight."
             ],
-            'dinner': [
-                {'name': 'Light dal with roti', 'calories': 300, 'type': 'light'},
-                {'name': 'Vegetable soup with bread', 'calories': 200, 'type': 'light'},
-                {'name': 'Grilled chicken with salad', 'calories': 350, 'type': 'protein'},
-                {'name': 'Khichdi with ghee', 'calories': 280, 'type': 'comfort'},
-                {'name': 'Fish curry with rice', 'calories': 450, 'type': 'balanced'}
-            ],
-            'snacks': [
-                {'name': 'Mixed nuts', 'calories': 150, 'type': 'healthy'},
-                {'name': 'Fruits (apple/banana)', 'calories': 80, 'type': 'healthy'},
-                {'name': 'Yogurt with fruits', 'calories': 120, 'type': 'healthy'},
-                {'name': 'Green tea with biscuits', 'calories': 100, 'type': 'light'}
+            'maintain': [
+                "Continue your current eating patterns - they're working well!",
+                "Focus on maintaining variety in your diet for optimal nutrition.",
+                "Listen to your body's hunger and fullness cues.",
+                "Stay hydrated and maintain regular meal timing."
             ]
         }
+        
+        # Activity level recommendations
+        self.activity_suggestions = {
+            'sedentary': [
+                "Try to add a 30-minute walk to your daily routine.",
+                "Consider standing desk work or frequent movement breaks.",
+                "Start with light exercises like stretching or yoga."
+            ],
+            'lightly_active': [
+                "Great job staying active! Try to add one more workout per week.",
+                "Include some strength training to complement your cardio.",
+                "Consider joining a sports club or fitness class."
+            ],
+            'moderately_active': [
+                "Excellent activity level! Maintain your current routine.",
+                "Mix up your workouts to prevent boredom.",
+                "Focus on recovery and proper nutrition to fuel your activities."
+            ],
+            'very_active': [
+                "Outstanding fitness commitment! Ensure you're eating enough to fuel your workouts.",
+                "Pay attention to recovery and rest days.",
+                "Consider working with a nutritionist to optimize your diet."
+            ]
+        }
+        
+        # Nutrition-based suggestions
+        self.nutrition_suggestions = {
+            'high_calorie': [
+                "Your calorie intake seems high. Consider smaller portions.",
+                "Focus on nutrient-dense foods rather than empty calories.",
+                "Try eating more slowly to help your body recognize fullness.",
+                "Include more vegetables to balance your meal."
+            ],
+            'low_calorie': [
+                "Your calorie intake might be too low. Consider adding healthy snacks.",
+                "Include more protein to maintain energy levels.",
+                "Don't skip meals - consistent eating helps metabolism."
+            ],
+            'balanced': [
+                "Great job maintaining a balanced calorie intake!",
+                "Your eating patterns look healthy and sustainable.",
+                "Continue focusing on variety and moderation."
+            ],
+            'high_carb': [
+                "Consider balancing carbs with more protein and healthy fats.",
+                "Choose complex carbohydrates over simple sugars.",
+                "Add more vegetables to your carb-heavy meals."
+            ],
+            'high_protein': [
+                "Good protein intake! Make sure to include variety in protein sources.",
+                "Balance with adequate carbs for energy and fiber for digestion.",
+                "Stay hydrated as protein metabolism requires more water."
+            ],
+            'high_fat': [
+                "Focus on healthy fats like avocados, nuts, and olive oil.",
+                "Balance with lean proteins and complex carbohydrates.",
+                "Monitor portion sizes as fats are calorie-dense."
+            ]
+        }
+        
+        # Meal timing suggestions
+        self.timing_suggestions = [
+            "Try to eat regular meals at consistent times each day.",
+            "Don't skip breakfast - it helps kickstart your metabolism.",
+            "Avoid eating large meals close to bedtime.",
+            "Consider a light snack if more than 4 hours between meals.",
+            "Stay hydrated throughout the day with water."
+        ]
+        
+        # Indian diet specific suggestions
+        self.indian_diet_suggestions = [
+            "Include a variety of dals and legumes for complete proteins.",
+            "Use turmeric and other spices - they have anti-inflammatory properties.",
+            "Balance rice with vegetable curries and protein sources.",
+            "Try millets as alternatives to rice for better nutrition.",
+            "Include curd/yogurt for probiotics and calcium.",
+            "Use ghee in moderation for healthy fats.",
+            "Include seasonal fruits and vegetables for variety."
+        ]
     
-    def get_suggestions(self, user_id: int, calorie_results: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def get_suggestions(self, user_id, calorie_results):
         """
-        Generate personalized diet suggestions based on user profile and current intake
+        Generate personalized diet suggestions based on user data and current intake
         
         Args:
-            user_id: User ID to get profile information
-            calorie_results: Results from current meal analysis
+            user_id: ID of the user
+            calorie_results: Results from calorie estimation
             
         Returns:
             List of personalized suggestions
@@ -83,50 +125,44 @@ class DietAdvisor:
         try:
             # Get user profile
             user_profile = self._get_user_profile(user_id)
-            if not user_profile:
-                return self._get_generic_suggestions()
-            
-            # Calculate daily calorie needs
-            daily_needs = self._calculate_daily_needs(user_profile)
-            
-            # Get today's total intake
-            today_intake = self._get_today_intake(user_id)
             
             # Get recent eating patterns
-            eating_patterns = self._analyze_eating_patterns(user_id)
+            recent_intake = self._get_recent_intake(user_id, days=7)
             
-            # Generate suggestions
-            suggestions = []
+            # Generate suggestions based on current meal
+            meal_suggestions = self._analyze_current_meal(calorie_results)
             
-            # Calorie-based suggestions
-            suggestions.extend(self._get_calorie_suggestions(
-                daily_needs, today_intake, calorie_results['total_calories']
-            ))
+            # Generate suggestions based on user goals
+            goal_suggestions = self._get_goal_based_suggestions(user_profile)
             
-            # Goal-based suggestions
-            suggestions.extend(self._get_goal_suggestions(
-                user_profile['diet_goal'], calorie_results
-            ))
+            # Generate nutrition balance suggestions
+            nutrition_suggestions = self._get_nutrition_suggestions(calorie_results, recent_intake)
             
-            # Health-based suggestions
-            suggestions.extend(self._get_health_suggestions(calorie_results))
+            # Generate timing suggestions
+            timing_suggestions = self._get_timing_suggestions(user_id)
             
-            # Meal timing suggestions
-            suggestions.extend(self._get_timing_suggestions())
+            # Combine and prioritize suggestions
+            all_suggestions = []
+            all_suggestions.extend(meal_suggestions[:2])
+            all_suggestions.extend(goal_suggestions[:2])
+            all_suggestions.extend(nutrition_suggestions[:1])
+            all_suggestions.extend(timing_suggestions[:1])
             
-            # Pattern-based suggestions
-            suggestions.extend(self._get_pattern_suggestions(eating_patterns))
+            # Add some general health tips
+            if len(all_suggestions) < 5:
+                general_tips = random.sample(self.indian_diet_suggestions, 2)
+                all_suggestions.extend(general_tips)
             
             # Save suggestions to database
-            self._save_suggestions(user_id, suggestions)
+            self._save_suggestions(user_id, all_suggestions)
             
-            return suggestions[:5]  # Return top 5 suggestions
+            return all_suggestions[:5]  # Return top 5 suggestions
             
         except Exception as e:
             print(f"Error generating suggestions: {str(e)}")
-            return self._get_generic_suggestions()
+            return self._get_default_suggestions()
     
-    def _get_user_profile(self, user_id: int) -> Dict[str, Any]:
+    def _get_user_profile(self, user_id):
         """Get user profile information from database"""
         try:
             conn = sqlite3.connect('food_app.db')
@@ -138,306 +174,144 @@ class DietAdvisor:
             
             if result:
                 return {
-                    'age': result[0],
-                    'weight': result[1],
-                    'height': result[2],
-                    'gender': result[3],
-                    'activity_level': result[4],
-                    'diet_goal': result[5]
+                    'age': result[0] or 25,
+                    'weight': result[1] or 70,
+                    'height': result[2] or 170,
+                    'gender': result[3] or 'other',
+                    'activity_level': result[4] or 'lightly_active',
+                    'diet_goal': result[5] or 'maintain'
                 }
-            return None
-            
+            else:
+                return self._get_default_profile()
+                
         except Exception as e:
             print(f"Error getting user profile: {str(e)}")
-            return None
+            return self._get_default_profile()
     
-    def _calculate_daily_needs(self, profile: Dict[str, Any]) -> Dict[str, float]:
-        """Calculate daily calorie and nutritional needs using Mifflin-St Jeor equation"""
-        age = profile.get('age', 30)
-        weight = profile.get('weight', 70)  # kg
-        height = profile.get('height', 170)  # cm
-        gender = profile.get('gender', 'male')
-        activity = profile.get('activity_level', 'moderately_active')
-        goal = profile.get('diet_goal', 'maintain')
-        
-        # Calculate BMR (Basal Metabolic Rate)
-        if gender == 'male':
-            bmr = 10 * weight + 6.25 * height - 5 * age + 5
-        else:
-            bmr = 10 * weight + 6.25 * height - 5 * age - 161
-        
-        # Apply activity multiplier
-        multiplier = self.bmr_multipliers.get(activity, 1.55)
-        daily_calories = bmr * multiplier
-        
-        # Adjust for goals
-        goal_adjustment = self.goal_foods.get(goal, {}).get('calorie_deficit', 0)
-        if goal == 'weight_loss':
-            daily_calories -= goal_adjustment
-        elif goal == 'weight_gain':
-            daily_calories += self.goal_foods[goal]['calorie_surplus']
-        
-        # Calculate macronutrient needs
-        protein_grams = weight * 1.2  # 1.2g per kg body weight
-        fat_grams = daily_calories * 0.25 / 9  # 25% of calories from fat
-        carb_grams = (daily_calories - (protein_grams * 4) - (fat_grams * 9)) / 4
-        
+    def _get_default_profile(self):
+        """Return default user profile"""
         return {
-            'calories': round(daily_calories),
-            'protein': round(protein_grams, 1),
-            'carbs': round(carb_grams, 1),
-            'fat': round(fat_grams, 1),
-            'fiber': 25  # Standard recommendation
+            'age': 25,
+            'weight': 70,
+            'height': 170,
+            'gender': 'other',
+            'activity_level': 'lightly_active',
+            'diet_goal': 'maintain'
         }
     
-    def _get_today_intake(self, user_id: int) -> Dict[str, float]:
-        """Get today's total nutritional intake"""
+    def _get_recent_intake(self, user_id, days=7):
+        """Get recent food intake data"""
         try:
-            today = datetime.now().date()
             conn = sqlite3.connect('food_app.db')
             c = conn.cursor()
-            c.execute("""SELECT SUM(total_calories), SUM(total_volume) 
-                         FROM food_estimates 
-                         WHERE user_id = ? AND DATE(created_at) = ?""", 
-                     (user_id, today))
-            result = c.fetchone()
-            conn.close()
             
-            return {
-                'calories': result[0] or 0,
-                'volume': result[1] or 0
-            }
-            
-        except Exception as e:
-            print(f"Error getting today's intake: {str(e)}")
-            return {'calories': 0, 'volume': 0}
-    
-    def _analyze_eating_patterns(self, user_id: int) -> Dict[str, Any]:
-        """Analyze user's eating patterns over the last week"""
-        try:
-            week_ago = datetime.now() - timedelta(days=7)
-            conn = sqlite3.connect('food_app.db')
-            c = conn.cursor()
-            c.execute("""SELECT detected_foods, total_calories, created_at 
+            # Get intake from last N days
+            cutoff_date = datetime.now() - timedelta(days=days)
+            c.execute("""SELECT total_calories, detected_foods, created_at 
                          FROM food_estimates 
                          WHERE user_id = ? AND created_at >= ?
                          ORDER BY created_at DESC""", 
-                     (user_id, week_ago))
+                     (user_id, cutoff_date))
+            
             results = c.fetchall()
             conn.close()
             
-            if not results:
-                return {'average_calories': 0, 'frequent_foods': [], 'meal_frequency': 0}
-            
-            total_calories = sum(row[1] for row in results)
-            avg_calories = total_calories / max(len(results), 1)
-            
-            # Extract frequent foods
-            all_foods = []
-            for row in results:
-                try:
-                    foods = eval(row[0]) if row[0] else []
-                    all_foods.extend([food.get('name', '') for food in foods])
-                except:
-                    continue
-            
-            # Count food frequency
-            food_counts = {}
-            for food in all_foods:
-                food_counts[food] = food_counts.get(food, 0) + 1
-            
-            frequent_foods = sorted(food_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+            total_calories = sum(row[0] or 0 for row in results)
+            avg_daily_calories = total_calories / max(days, 1)
             
             return {
-                'average_calories': round(avg_calories),
-                'frequent_foods': [food[0] for food in frequent_foods],
-                'meal_frequency': len(results),
-                'total_days': 7
+                'total_calories': total_calories,
+                'avg_daily_calories': avg_daily_calories,
+                'meal_count': len(results),
+                'days': days
             }
             
         except Exception as e:
-            print(f"Error analyzing patterns: {str(e)}")
-            return {'average_calories': 0, 'frequent_foods': [], 'meal_frequency': 0}
-    
-    def _get_calorie_suggestions(self, daily_needs: Dict, today_intake: Dict, current_meal: float) -> List[Dict]:
-        """Generate calorie-based suggestions"""
-        suggestions = []
-        
-        remaining_calories = daily_needs['calories'] - today_intake['calories'] - current_meal
-        
-        if remaining_calories > 800:
-            suggestions.append({
-                'type': 'calorie_target',
-                'message': f"You have {int(remaining_calories)} calories remaining today. Consider having 2-3 more balanced meals.",
-                'priority': 'medium'
-            })
-        elif remaining_calories > 400:
-            suggestions.append({
-                'type': 'calorie_target',
-                'message': f"You have {int(remaining_calories)} calories left. A light dinner would be perfect!",
-                'priority': 'medium'
-            })
-        elif remaining_calories > 0:
-            suggestions.append({
-                'type': 'calorie_target',
-                'message': f"You have {int(remaining_calories)} calories remaining. Consider a healthy snack.",
-                'priority': 'low'
-            })
-        else:
-            suggestions.append({
-                'type': 'calorie_warning',
-                'message': "You've reached your daily calorie target. Consider lighter meals for the rest of the day.",
-                'priority': 'high'
-            })
-        
-        return suggestions
-    
-    def _get_goal_suggestions(self, goal: str, calorie_results: Dict) -> List[Dict]:
-        """Generate goal-based suggestions"""
-        suggestions = []
-        
-        if not goal or goal not in self.goal_foods:
-            return suggestions
-        
-        goal_info = self.goal_foods[goal]
-        
-        if goal == 'weight_loss':
-            suggestions.append({
-                'type': 'goal_advice',
-                'message': "Focus on high-fiber, low-calorie foods. Add more vegetables and lean proteins.",
-                'priority': 'medium'
-            })
-            
-            # Suggest specific foods
-            recommended = random.choice(goal_info['recommended'])
-            suggestions.append({
-                'type': 'food_suggestion',
-                'message': f"Try adding {recommended} to your next meal for better nutrition.",
-                'priority': 'low'
-            })
-        
-        elif goal == 'weight_gain':
-            suggestions.append({
-                'type': 'goal_advice',
-                'message': "Include more calorie-dense, nutritious foods. Don't skip meals!",
-                'priority': 'medium'
-            })
-        
-        elif goal == 'muscle_gain':
-            protein_in_meal = sum(food.get('protein', 0) for food in calorie_results.get('food_details', []))
-            if protein_in_meal < 20:
-                suggestions.append({
-                    'type': 'protein_advice',
-                    'message': "This meal is low in protein. Add eggs, chicken, dal, or paneer for muscle building.",
-                    'priority': 'high'
-                })
-        
-        return suggestions
-    
-    def _get_health_suggestions(self, calorie_results: Dict) -> List[Dict]:
-        """Generate health-based suggestions"""
-        suggestions = []
-        
-        health_score = calorie_results.get('health_score', {})
-        recommendations = health_score.get('recommendations', [])
-        
-        for rec in recommendations:
-            suggestions.append({
-                'type': 'health_improvement',
-                'message': rec,
-                'priority': 'medium'
-            })
-        
-        # Check for freshness issues
-        if not calorie_results.get('is_fresh', True):
-            suggestions.append({
-                'type': 'food_safety',
-                'message': "⚠️ Some food items appear questionable. Always ensure food freshness for safety!",
-                'priority': 'high'
-            })
-        
-        return suggestions
-    
-    def _get_timing_suggestions(self) -> List[Dict]:
-        """Generate meal timing suggestions"""
-        current_hour = datetime.now().hour
-        suggestions = []
-        
-        if 6 <= current_hour <= 10:
-            suggestions.append({
-                'type': 'timing',
-                'message': "Perfect time for breakfast! Start your day with a nutritious meal.",
-                'priority': 'low'
-            })
-        elif 12 <= current_hour <= 14:
-            suggestions.append({
-                'type': 'timing',
-                'message': "Lunch time! Make sure to include vegetables and proteins.",
-                'priority': 'low'
-            })
-        elif 19 <= current_hour <= 21:
-            suggestions.append({
-                'type': 'timing',
-                'message': "Dinner time! Keep it light and easy to digest.",
-                'priority': 'low'
-            })
-        elif current_hour >= 22:
-            suggestions.append({
-                'type': 'timing',
-                'message': "Late night eating! Consider lighter options to avoid sleep disruption.",
-                'priority': 'medium'
-            })
-        
-        return suggestions
-    
-    def _get_pattern_suggestions(self, patterns: Dict) -> List[Dict]:
-        """Generate suggestions based on eating patterns"""
-        suggestions = []
-        
-        avg_calories = patterns.get('average_calories', 0)
-        frequent_foods = patterns.get('frequent_foods', [])
-        meal_frequency = patterns.get('meal_frequency', 0)
-        
-        if meal_frequency < 14:  # Less than 2 meals per day average
-            suggestions.append({
-                'type': 'pattern_advice',
-                'message': "You're eating irregularly. Try to maintain consistent meal times for better metabolism.",
-                'priority': 'medium'
-            })
-        
-        if len(frequent_foods) <= 2:
-            suggestions.append({
-                'type': 'variety_advice',
-                'message': "Add more variety to your diet! Try different vegetables and protein sources.",
-                'priority': 'low'
-            })
-        
-        return suggestions
-    
-    def _get_generic_suggestions(self) -> List[Dict]:
-        """Generate generic suggestions when user profile is not available"""
-        generic_suggestions = [
-            {
-                'type': 'general',
-                'message': "Include a variety of colorful vegetables in your meals for better nutrition.",
-                'priority': 'medium'
-            },
-            {
-                'type': 'general',
-                'message': "Drink plenty of water throughout the day to stay hydrated.",
-                'priority': 'low'
-            },
-            {
-                'type': 'general',
-                'message': "Try to eat at regular intervals to maintain stable energy levels.",
-                'priority': 'medium'
+            print(f"Error getting recent intake: {str(e)}")
+            return {
+                'total_calories': 0,
+                'avg_daily_calories': 0,
+                'meal_count': 0,
+                'days': days
             }
-        ]
-        
-        return random.sample(generic_suggestions, min(3, len(generic_suggestions)))
     
-    def _save_suggestions(self, user_id: int, suggestions: List[Dict]):
-        """Save generated suggestions to database"""
+    def _analyze_current_meal(self, calorie_results):
+        """Analyze current meal and provide specific suggestions"""
+        suggestions = []
+        
+        total_calories = calorie_results.get('total_calories', 0)
+        food_details = calorie_results.get('food_details', [])
+        
+        # Analyze calorie content
+        if total_calories > 800:
+            suggestions.append("This meal is quite calorie-dense. Consider reducing portion sizes or adding more vegetables.")
+        elif total_calories < 200:
+            suggestions.append("This meal seems light. Consider adding some protein or healthy fats for better satiety.")
+        else:
+            suggestions.append("Good calorie content for this meal!")
+        
+        # Analyze food variety
+        if len(food_details) == 1:
+            suggestions.append("Try to include multiple food groups in your meal for better nutrition balance.")
+        elif len(food_details) >= 3:
+            suggestions.append("Great variety in your meal! This helps ensure you get diverse nutrients.")
+        
+        # Analyze specific foods
+        food_names = [food.get('name', '').lower() for food in food_details]
+        
+        if any('rice' in name or 'bread' in name for name in food_names):
+            if not any('vegetable' in name or 'salad' in name for name in food_names):
+                suggestions.append("Consider adding some vegetables to balance the carbohydrates in your meal.")
+        
+        if any('fried' in name or 'samosa' in name for name in food_names):
+            suggestions.append("You have some fried food. Try to balance with fresh vegetables or fruits.")
+        
+        return suggestions
+    
+    def _get_goal_based_suggestions(self, user_profile):
+        """Get suggestions based on user's diet goals"""
+        diet_goal = user_profile.get('diet_goal', 'maintain')
+        activity_level = user_profile.get('activity_level', 'lightly_active')
+        
+        suggestions = []
+        
+        # Add goal-specific suggestions
+        if diet_goal in self.health_suggestions:
+            suggestions.extend(random.sample(self.health_suggestions[diet_goal], 2))
+        
+        # Add activity-specific suggestions
+        if activity_level in self.activity_suggestions:
+            suggestions.extend(random.sample(self.activity_suggestions[activity_level], 1))
+        
+        return suggestions
+    
+    def _get_nutrition_suggestions(self, calorie_results, recent_intake):
+        """Generate nutrition-based suggestions"""
+        suggestions = []
+        
+        # Analyze calorie patterns
+        avg_calories = recent_intake.get('avg_daily_calories', 0)
+        
+        if avg_calories > 2500:
+            suggestions.extend(random.sample(self.nutrition_suggestions['high_calorie'], 1))
+        elif avg_calories < 1500:
+            suggestions.extend(random.sample(self.nutrition_suggestions['low_calorie'], 1))
+        else:
+            suggestions.extend(random.sample(self.nutrition_suggestions['balanced'], 1))
+        
+        return suggestions
+    
+    def _get_timing_suggestions(self, user_id):
+        """Generate meal timing suggestions"""
+        suggestions = []
+        
+        # Add general timing suggestions
+        suggestions.extend(random.sample(self.timing_suggestions, 1))
+        
+        return suggestions
+    
+    def _save_suggestions(self, user_id, suggestions):
+        """Save suggestions to database"""
         try:
             conn = sqlite3.connect('food_app.db')
             c = conn.cursor()
@@ -445,7 +319,7 @@ class DietAdvisor:
             for suggestion in suggestions:
                 c.execute("""INSERT INTO diet_suggestions (user_id, suggestion_type, suggestion_text) 
                              VALUES (?, ?, ?)""",
-                         (user_id, suggestion['type'], suggestion['message']))
+                         (user_id, 'ai_generated', suggestion))
             
             conn.commit()
             conn.close()
@@ -453,58 +327,82 @@ class DietAdvisor:
         except Exception as e:
             print(f"Error saving suggestions: {str(e)}")
     
-    def get_meal_plan(self, user_id: int, meal_type: str) -> Dict[str, Any]:
-        """Generate a meal plan suggestion for specific meal type"""
+    def _get_default_suggestions(self):
+        """Return default suggestions when there's an error"""
+        return [
+            "Maintain a balanced diet with vegetables, proteins, and whole grains.",
+            "Stay hydrated by drinking plenty of water throughout the day.",
+            "Try to eat regular meals at consistent times.",
+            "Include a variety of colorful fruits and vegetables in your diet.",
+            "Practice portion control to maintain a healthy weight."
+        ]
+    
+    def get_weekly_report(self, user_id):
+        """Generate a weekly nutrition report"""
         try:
+            recent_intake = self._get_recent_intake(user_id, days=7)
             user_profile = self._get_user_profile(user_id)
-            daily_needs = self._calculate_daily_needs(user_profile) if user_profile else None
             
-            meal_suggestions = self.indian_meal_suggestions.get(meal_type, [])
+            # Calculate recommended daily calories
+            bmr = self._calculate_bmr(user_profile)
+            recommended_calories = self._calculate_daily_calories(bmr, user_profile['activity_level'])
             
-            if not meal_suggestions:
-                return {'error': 'Invalid meal type'}
-            
-            # Filter suggestions based on user goals and needs
-            if user_profile and daily_needs:
-                goal = user_profile.get('diet_goal', 'maintain')
-                
-                if goal == 'weight_loss':
-                    # Prefer lighter options
-                    filtered = [meal for meal in meal_suggestions if meal['calories'] < 400]
-                elif goal == 'weight_gain':
-                    # Prefer heavier options
-                    filtered = [meal for meal in meal_suggestions if meal['calories'] > 300]
-                else:
-                    filtered = meal_suggestions
-                
-                meal_suggestions = filtered if filtered else meal_suggestions
-            
-            # Select a random suggestion
-            selected_meal = random.choice(meal_suggestions)
-            
-            return {
-                'meal_name': selected_meal['name'],
-                'estimated_calories': selected_meal['calories'],
-                'meal_type': selected_meal['type'],
-                'timing': meal_type,
-                'nutritional_advice': self._get_meal_advice(selected_meal, user_profile)
+            report = {
+                'period': '7 days',
+                'total_calories': recent_intake['total_calories'],
+                'avg_daily_calories': recent_intake['avg_daily_calories'],
+                'recommended_daily_calories': recommended_calories,
+                'meal_count': recent_intake['meal_count'],
+                'compliance': self._calculate_compliance(recent_intake['avg_daily_calories'], recommended_calories),
+                'suggestions': self.get_suggestions(user_id, {'total_calories': recent_intake['avg_daily_calories']}),
+                'generated_at': datetime.now().isoformat()
             }
             
+            return report
+            
         except Exception as e:
-            return {'error': f'Error generating meal plan: {str(e)}'}
+            print(f"Error generating weekly report: {str(e)}")
+            return None
     
-    def _get_meal_advice(self, meal: Dict, profile: Dict) -> str:
-        """Get specific advice for a meal based on user profile"""
-        if not profile:
-            return "Enjoy your meal and eat mindfully!"
+    def _calculate_bmr(self, user_profile):
+        """Calculate Basal Metabolic Rate using Harris-Benedict equation"""
+        age = user_profile['age']
+        weight = user_profile['weight']
+        height = user_profile['height']
+        gender = user_profile['gender']
         
-        goal = profile.get('diet_goal', 'maintain')
+        if gender.lower() == 'male':
+            bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+        else:  # female or other
+            bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
         
-        if goal == 'weight_loss' and meal['calories'] > 400:
-            return "Consider smaller portions or add more vegetables to reduce calories."
-        elif goal == 'weight_gain' and meal['calories'] < 300:
-            return "Add some nuts, ghee, or extra protein to increase the calorie content."
-        elif goal == 'muscle_gain':
-            return "Great choice! Make sure to include adequate protein in this meal."
+        return bmr
+    
+    def _calculate_daily_calories(self, bmr, activity_level):
+        """Calculate daily calorie needs based on activity level"""
+        activity_multipliers = {
+            'sedentary': 1.2,
+            'lightly_active': 1.375,
+            'moderately_active': 1.55,
+            'very_active': 1.725,
+            'extremely_active': 1.9
+        }
+        
+        multiplier = activity_multipliers.get(activity_level, 1.375)
+        return int(bmr * multiplier)
+    
+    def _calculate_compliance(self, actual_calories, recommended_calories):
+        """Calculate how well user is meeting their calorie goals"""
+        if recommended_calories == 0:
+            return 0
+        
+        ratio = actual_calories / recommended_calories
+        
+        if 0.9 <= ratio <= 1.1:
+            return 100  # Excellent compliance
+        elif 0.8 <= ratio <= 1.2:
+            return 80   # Good compliance
+        elif 0.7 <= ratio <= 1.3:
+            return 60   # Fair compliance
         else:
-            return "This looks like a balanced meal. Enjoy it!"
+            return 40   # Poor compliance
