@@ -1,0 +1,323 @@
+{% extends "car_base.html" %}
+
+{% block title %}Predict Car Price - CarPredict{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 100px; margin-bottom: 50px;">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h1 class="text-white">Car Price Prediction</h1>
+            <p class="text-white-50 lead">Enter your car details to get instant price estimates</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Prediction Form -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-car"></i> Car Details</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="predictionForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="year" class="form-label">
+                                    <i class="fas fa-calendar"></i> Manufacturing Year *
+                                </label>
+                                <select class="form-select" id="year" name="year" required>
+                                    <option value="">Select Year</option>
+                                    {% for year in range(2003, 2021) %}
+                                        <option value="{{ year }}" {% if car_details and car_details.Year == year %}selected{% endif %}>
+                                            {{ year }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="present_price" class="form-label">
+                                    <i class="fas fa-tag"></i> Present Price (₹ Lakhs) *
+                                </label>
+                                <input type="number" class="form-control" id="present_price" name="present_price" 
+                                       step="0.1" min="1" max="100" placeholder="e.g., 12.5" required
+                                       value="{% if car_details %}{{ car_details.Present_Price }}{% endif %}">
+                                <div class="form-text">Current market price of the car when new</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="kms_driven" class="form-label">
+                                    <i class="fas fa-road"></i> Kilometers Driven *
+                                </label>
+                                <input type="number" class="form-control" id="kms_driven" name="kms_driven" 
+                                       min="1" max="500000" placeholder="e.g., 45000" required
+                                       value="{% if car_details %}{{ car_details.Kms_Driven }}{% endif %}">
+                                <div class="form-text">Total distance traveled by the car</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="fuel_type" class="form-label">
+                                    <i class="fas fa-gas-pump"></i> Fuel Type *
+                                </label>
+                                <select class="form-select" id="fuel_type" name="fuel_type" required>
+                                    <option value="">Select Fuel Type</option>
+                                    <option value="Petrol" {% if car_details and car_details.Fuel_Type == 'Petrol' %}selected{% endif %}>Petrol</option>
+                                    <option value="Diesel" {% if car_details and car_details.Fuel_Type == 'Diesel' %}selected{% endif %}>Diesel</option>
+                                    <option value="CNG" {% if car_details and car_details.Fuel_Type == 'CNG' %}selected{% endif %}>CNG</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="seller_type" class="form-label">
+                                    <i class="fas fa-user-tie"></i> Seller Type *
+                                </label>
+                                <select class="form-select" id="seller_type" name="seller_type" required>
+                                    <option value="">Select Seller Type</option>
+                                    <option value="Individual" {% if car_details and car_details.Seller_Type == 'Individual' %}selected{% endif %}>Individual</option>
+                                    <option value="Dealer" {% if car_details and car_details.Seller_Type == 'Dealer' %}selected{% endif %}>Dealer</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="transmission" class="form-label">
+                                    <i class="fas fa-cogs"></i> Transmission *
+                                </label>
+                                <select class="form-select" id="transmission" name="transmission" required>
+                                    <option value="">Select Transmission</option>
+                                    <option value="Manual" {% if car_details and car_details.Transmission == 'Manual' %}selected{% endif %}>Manual</option>
+                                    <option value="Automatic" {% if car_details and car_details.Transmission == 'Automatic' %}selected{% endif %}>Automatic</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="owner" class="form-label">
+                                <i class="fas fa-users"></i> Number of Previous Owners *
+                            </label>
+                            <select class="form-select" id="owner" name="owner" required>
+                                <option value="">Select Owner Count</option>
+                                <option value="0" {% if car_details and car_details.Owner == 0 %}selected{% endif %}>First Owner (0)</option>
+                                <option value="1" {% if car_details and car_details.Owner == 1 %}selected{% endif %}>Second Owner (1)</option>
+                                <option value="2" {% if car_details and car_details.Owner == 2 %}selected{% endif %}>Third Owner (2)</option>
+                                <option value="3" {% if car_details and car_details.Owner == 3 %}selected{% endif %}>Fourth+ Owner (3+)</option>
+                            </select>
+                            <div class="form-text">Number of previous owners (0 = First Owner)</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 btn-lg">
+                            <i class="fas fa-calculator"></i> Predict Price
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="col-lg-6">
+            {% if predictions %}
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-chart-line"></i> Price Predictions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5>Input Summary:</h5>
+                        <div class="row text-sm">
+                            <div class="col-6">
+                                <strong>Year:</strong> {{ car_details.Year }}<br>
+                                <strong>Present Price:</strong> ₹{{ car_details.Present_Price }} L<br>
+                                <strong>Kms Driven:</strong> {{ "{:,}".format(car_details.Kms_Driven) }}
+                            </div>
+                            <div class="col-6">
+                                <strong>Fuel:</strong> {{ car_details.Fuel_Type }}<br>
+                                <strong>Transmission:</strong> {{ car_details.Transmission }}<br>
+                                <strong>Seller:</strong> {{ car_details.Seller_Type }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5>Model Predictions:</h5>
+                    {% for model, price in predictions.items() %}
+                    <div class="prediction-card mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ model }}</h6>
+                                {% if model_performance and model in model_performance %}
+                                <small>R² Score: {{ "%.3f"|format(model_performance[model]['R2']) }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <h4 class="mb-0">₹{{ price }} L</h4>
+                                <small>Predicted Price</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Best Prediction Highlight -->
+                    {% if predictions %}
+                    <div class="alert alert-success mt-4">
+                        <h6><i class="fas fa-star"></i> Recommended Price Range:</h6>
+                        <p class="mb-0">
+                            <strong>₹{{ predictions['Random Forest'] }} - ₹{{ predictions['Gradient Boosting'] }} Lakhs</strong><br>
+                            <small>Based on our best performing models</small>
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4">
+                        <button class="btn btn-outline-primary me-2" onclick="window.print()">
+                            <i class="fas fa-print"></i> Print Report
+                        </button>
+                        {% if session.user_id %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-save"></i> Saved to History
+                        </span>
+                        {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-outline-success">
+                            <i class="fas fa-user-plus"></i> Sign Up to Save
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-calculator text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-muted">Ready to Predict</h4>
+                    <p class="text-muted">Fill in the car details to get instant price predictions from our AI models.</p>
+                    
+                    <div class="mt-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="border rounded p-3">
+                                    <i class="fas fa-brain text-primary" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">5 ML Models</h6>
+                                    <small class="text-muted">Multiple algorithms</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-3">
+                                    <i class="fas fa-bolt text-warning" style="font-size: 2rem;"></i>
+                                    <h6 class="mt-2">Instant Results</h6>
+                                    <small class="text-muted">Real-time predictions</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Tips Section -->
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5><i class="fas fa-lightbulb text-warning"></i> Tips for Accurate Predictions</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success"></i> Enter the exact manufacturing year</li>
+                                <li><i class="fas fa-check text-success"></i> Use current market price when new</li>
+                                <li><i class="fas fa-check text-success"></i> Provide accurate odometer reading</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success"></i> Consider maintenance history</li>
+                                <li><i class="fas fa-check text-success"></i> Factor in regional variations</li>
+                                <li><i class="fas fa-check text-success"></i> Compare with multiple models</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form validation and enhancement
+document.getElementById('predictionForm').addEventListener('submit', function(e) {
+    // Validate numeric inputs
+    const presentPrice = parseFloat(document.getElementById('present_price').value);
+    const kmsData = parseInt(document.getElementById('kms_driven').value);
+    
+    if (presentPrice < 1 || presentPrice > 100) {
+        e.preventDefault();
+        alert('Please enter a valid present price between ₹1-100 lakhs');
+        return;
+    }
+    
+    if (kmsData < 1 || kmsData > 500000) {
+        e.preventDefault();
+        alert('Please enter valid kilometers driven (1-500,000)');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating...';
+    submitBtn.disabled = true;
+    
+    // Re-enable button after 3 seconds (for better UX even if form submits)
+    setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }, 3000);
+});
+
+// Real-time input formatting
+document.getElementById('present_price').addEventListener('input', function() {
+    if (this.value > 100) this.value = 100;
+    if (this.value < 0) this.value = '';
+});
+
+document.getElementById('kms_driven').addEventListener('input', function() {
+    if (this.value > 500000) this.value = 500000;
+    if (this.value < 0) this.value = '';
+    
+    // Format with commas for better readability
+    const value = this.value.replace(/,/g, '');
+    if (value) {
+        this.setAttribute('title', 'Kilometers: ' + parseInt(value).toLocaleString());
+    }
+});
+
+// Auto-calculate age and provide helpful hints
+document.getElementById('year').addEventListener('change', function() {
+    if (this.value) {
+        const age = 2024 - parseInt(this.value);
+        const hint = age <= 3 ? 'Nearly new' : age <= 7 ? 'Moderately used' : 'Well used';
+        this.setAttribute('title', `Car age: ${age} years (${hint})`);
+    }
+});
+
+// Provide fuel type recommendations
+document.getElementById('fuel_type').addEventListener('change', function() {
+    const hints = {
+        'Petrol': 'Generally lower maintenance, good for city driving',
+        'Diesel': 'Better fuel efficiency, good for highway driving',
+        'CNG': 'Eco-friendly, lower running costs'
+    };
+    
+    if (hints[this.value]) {
+        this.setAttribute('title', hints[this.value]);
+    }
+});
+</script>
+{% endblock %}

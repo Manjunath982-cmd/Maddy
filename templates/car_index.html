@@ -1,0 +1,243 @@
+{% extends "car_base.html" %}
+
+{% block title %}Car Price Predictor - AI-Powered Used Car Valuation{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="hero-title">Smart Car Price Prediction</h1>
+                <p class="hero-subtitle">
+                    Get instant, accurate used car valuations using advanced machine learning algorithms.
+                    Make informed decisions in the used car market with confidence.
+                </p>
+                <div class="d-flex gap-3 justify-content-center justify-content-lg-start">
+                    <a href="{{ url_for('predict') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-calculator"></i> Predict Now
+                    </a>
+                    <a href="{{ url_for('analytics') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-chart-line"></i> View Analytics
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-car feature-icon" style="font-size: 8rem; color: rgba(255,255,255,0.9);"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="text-white mb-4">Why Choose CarPredict?</h2>
+                <p class="text-white-50 lead">
+                    Powered by multiple machine learning algorithms for the most accurate predictions
+                </p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-brain feature-icon"></i>
+                        <h4>AI-Powered</h4>
+                        <p class="text-muted">
+                            Uses 5 different machine learning algorithms including Random Forest, 
+                            Gradient Boosting, and Linear Regression for comprehensive analysis.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-bolt feature-icon"></i>
+                        <h4>Instant Results</h4>
+                        <p class="text-muted">
+                            Get real-time price predictions in seconds. Simply enter your car details 
+                            and receive instant valuations from multiple models.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-bar feature-icon"></i>
+                        <h4>Detailed Analytics</h4>
+                        <p class="text-muted">
+                            View model performance metrics, accuracy scores, and comparison 
+                            charts to understand prediction reliability.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 col-sm-6">
+                <div class="card stats-card">
+                    <div class="stats-number">5</div>
+                    <h5>ML Models</h5>
+                    <p class="text-muted">Multiple algorithms for accurate predictions</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card stats-card">
+                    <div class="stats-number">7</div>
+                    <h5>Key Features</h5>
+                    <p class="text-muted">Comprehensive car attributes analysis</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card stats-card">
+                    <div class="stats-number">95%</div>
+                    <h5>Accuracy</h5>
+                    <p class="text-muted">High prediction accuracy with R² score</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card stats-card">
+                    <div class="stats-number">1000+</div>
+                    <h5>Training Data</h5>
+                    <p class="text-muted">Extensive dataset for robust predictions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="text-white mb-4">How It Works</h2>
+                <p class="text-white-50 lead">Simple 3-step process to get your car's predicted price</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <span class="badge bg-primary" style="font-size: 1.5rem; width: 60px; height: 60px; line-height: 45px; border-radius: 50%;">1</span>
+                        </div>
+                        <h4>Enter Car Details</h4>
+                        <p class="text-muted">
+                            Input your car's information including year, present price, kilometers driven, 
+                            fuel type, transmission, seller type, and ownership history.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <span class="badge bg-primary" style="font-size: 1.5rem; width: 60px; height: 60px; line-height: 45px; border-radius: 50%;">2</span>
+                        </div>
+                        <h4>AI Analysis</h4>
+                        <p class="text-muted">
+                            Our machine learning models analyze your input using trained algorithms 
+                            to calculate the most accurate price prediction.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <span class="badge bg-primary" style="font-size: 1.5rem; width: 60px; height: 60px; line-height: 45px; border-radius: 50%;">3</span>
+                        </div>
+                        <h4>Get Results</h4>
+                        <p class="text-muted">
+                            Receive instant price predictions from all models with performance 
+                            metrics and confidence scores for informed decision making.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h2 class="mb-4">Ready to Predict Your Car's Value?</h2>
+                <p class="lead text-muted mb-4">
+                    Join thousands of users who trust our AI-powered predictions for accurate car valuations.
+                </p>
+                <a href="{{ url_for('predict') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket"></i> Start Prediction
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Models Overview -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="text-white mb-4">Machine Learning Models</h2>
+                <p class="text-white-50">We use multiple algorithms to ensure the most accurate predictions</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5><i class="fas fa-line-chart text-primary"></i> Linear Models</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Linear Regression</li>
+                            <li><i class="fas fa-check text-success"></i> Ridge Regression</li>
+                            <li><i class="fas fa-check text-success"></i> Lasso Regression</li>
+                        </ul>
+                        <p class="text-muted">
+                            Fast and interpretable models that capture linear relationships between features.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5><i class="fas fa-tree text-primary"></i> Ensemble Models</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Random Forest</li>
+                            <li><i class="fas fa-check text-success"></i> Gradient Boosting</li>
+                        </ul>
+                        <p class="text-muted">
+                            Advanced models that capture complex patterns and non-linear relationships for higher accuracy.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
