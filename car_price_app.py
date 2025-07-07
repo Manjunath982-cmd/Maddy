@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, jsonify, flash
+from flask import Flask, render_template, request, jsonify, flash, redirect, url_for, session
 import pandas as pd
 import numpy as np
 import pickle
 import os
+import sqlite3
+from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
@@ -13,6 +16,39 @@ warnings.filterwarnings('ignore')
 
 app = Flask(__name__)
 app.secret_key = 'car-price-prediction-secret-key-2024'
+
+def init_db():
+    """Initialize the database with user and prediction tables"""
+    conn = sqlite3.connect('car_price_app.db')
+    c = conn.cursor()
+    
+    # Users table
+    c.execute('''CREATE TABLE IF NOT EXISTS users
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  username TEXT UNIQUE NOT NULL,
+                  email TEXT UNIQUE NOT NULL,
+                  password_hash TEXT NOT NULL,
+                  full_name TEXT,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+    
+    # Car predictions table
+    c.execute('''CREATE TABLE IF NOT EXISTS car_predictions
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  user_id INTEGER,
+                  year INTEGER,
+                  present_price REAL,
+                  kms_driven INTEGER,
+                  fuel_type TEXT,
+                  seller_type TEXT,
+                  transmission TEXT,
+                  owner INTEGER,
+                  predicted_price REAL,
+                  model_used TEXT,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  FOREIGN KEY (user_id) REFERENCES users (id))''')
+    
+    conn.commit()
+    conn.close()
 
 class CarPricePredictor:
     def __init__(self):
@@ -191,9 +227,103 @@ class CarPricePredictor:
 # Initialize predictor
 predictor = CarPricePredictor()
 
+def save_prediction(user_id, car_details, predicted_price, model_used):
+    """Save prediction to database"""
+    if user_id:
+        conn = sqlite3.connect('car_price_app.db')
+        c = conn.cursor()
+        c.execute("""INSERT INTO car_predictions 
+                     (user_id, year, present_price, kms_driven, fuel_type, seller_type, transmission, owner, predicted_price, model_used) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                 (user_id, car_details['Year'], car_details['Present_Price'], car_details['Kms_Driven'],
+                  car_details['Fuel_Type'], car_details['Seller_Type'], car_details['Transmission'],
+                  car_details['Owner'], predicted_price, model_used))
+        conn.commit()
+        conn.close()
+
 @app.route('/')
 def index():
     return render_template('car_index.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        full_name = request.form.get('full_name', '')
+        
+        if not username or not email or not password:
+            flash('Username, email, and password are required!')
+            return render_template('car_register.html')
+        
+        password_hash = generate_password_hash(password)
+        
+        try:
+            conn = sqlite3.connect('car_price_app.db')
+            c = conn.cursor()
+            c.execute("INSERT INTO users (username, email, password_hash, full_name) VALUES (?, ?, ?, ?)",
+                     (username, email, password_hash, full_name))
+            conn.commit()
+            conn.close()
+            
+            flash('Registration successful! Please log in.')
+            return redirect(url_for('login'))
+        
+        except sqlite3.IntegrityError:
+            flash('Username or email already exists!')
+            return render_template('car_register.html')
+    
+    return render_template('car_register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        conn = sqlite3.connect('car_price_app.db')
+        c = conn.cursor()
+        c.execute("SELECT id, username, password_hash, full_name FROM users WHERE username = ?", (username,))
+        user = c.fetchone()
+        conn.close()
+        
+        if user and check_password_hash(user[2], password):
+            session['user_id'] = user[0]
+            session['username'] = user[1]
+            session['full_name'] = user[3]
+            flash(f'Welcome back, {user[1]}!')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password!')
+    
+    return render_template('car_login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('You have been logged out successfully.')
+    return redirect(url_for('index'))
+
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        flash('Please log in to view your profile.')
+        return redirect(url_for('login'))
+    
+    # Get user's recent predictions
+    conn = sqlite3.connect('car_price_app.db')
+    c = conn.cursor()
+    c.execute("""SELECT year, present_price, kms_driven, fuel_type, seller_type, transmission, 
+                        owner, predicted_price, model_used, created_at 
+                 FROM car_predictions 
+                 WHERE user_id = ? 
+                 ORDER BY created_at DESC 
+                 LIMIT 10""", (session['user_id'],))
+    predictions = c.fetchall()
+    conn.close()
+    
+    return render_template('car_profile.html', predictions=predictions)
 
 @app.route('/predict', methods=['GET', 'POST'])
 def predict():
@@ -212,10 +342,16 @@ def predict():
             
             # Make predictions with all models
             predictions = {}
+            best_model = 'Random Forest'  # Default best model
+            
             if predictor.trained:
                 for model_name in predictor.models.keys():
                     pred_price = predictor.predict_price(car_details, model_name)
                     predictions[model_name] = round(pred_price, 2)
+                
+                # Save prediction to database (using the best model)
+                if 'user_id' in session:
+                    save_prediction(session['user_id'], car_details, predictions[best_model], best_model)
             
             return render_template('car_predict.html', 
                                  car_details=car_details, 
@@ -269,6 +405,9 @@ def train_models():
     return redirect(url_for('analytics'))
 
 if __name__ == '__main__':
+    # Initialize database
+    init_db()
+    
     # Try to load existing models, otherwise train new ones
     if not predictor.load_models():
         print("Training new models...")
