@@ -1,0 +1,11 @@
+# Dataset configuration for YOLOv8 food detection project
+# Adjust 'path', 'train', 'val', and 'test' if you move the dataset directories
+
+path: data  # root directory of dataset
+train: images/train  # relative path inside 'path'
+val: images/val
+# (optional) test split can be omitted; YOLO will use val for mAP if not provided
+#test: images/test
+
+nc: 4  # number of classes
+names: ["indian_food", "foreign_food", "fruit", "vegetable"]
